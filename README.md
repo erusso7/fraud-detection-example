@@ -1,7 +1,6 @@
 # Trino Demo
 
-This repository contains a demo of trino.
-Use the file `./example/fraud.parquet` as an example to perform some queries, or run 
+This repository contains a demo of trino showing how to fetch `.parquet` files from "S3" (minio in this case) and performing some queries with trino SQL.
 
 ## Tech stack
 * Trino (formerly PrestoSQL)
