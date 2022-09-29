@@ -24,16 +24,14 @@ The following file types are supported for the Hive connector:
 * `docker-compose up -d`
 * Docker volumes are locally mounted. This should help in understanding the data of different service.
 
-## Seed with sample data
-1. Create the bucket: `mkdir -p data/minio/fraud/fraud_data`
-2. Choose one of these alternatives:
+## Setup some data
 
-##### A. Use the existing example file with 100 rows
+##### Using the existing file with 100 rows
 ```shell
 cp fraud_100.parquet data/minio/fraud/fraud_data/
 ```
 
-##### B. Create a file with the number of rows you need 
+##### Or creating a file with the number of rows you need 
 ```shell
 go run . <N> && cp fraud_<N>.parquet data/minio/fraud/fraud_data/
 ```
