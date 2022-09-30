@@ -1,36 +1,48 @@
+-- df = pd.read_parquet("fraud-cleaned-sample.parquet")
+-- df.columns
+-- df.dtypes
 DESC hive.fraud.fraud_data;
 
+-- list(df["label"].unique())
 SELECT DISTINCT label
 FROM hive.fraud.fraud_data;
 
+-- list(df["trans_type"].unique())
 SELECT DISTINCT trans_type
 FROM hive.fraud.fraud_data;
 
+-- df[["timestamp", "trans_type"]].groupby(["trans_type"]).count().nlargest(3, "timestamp")
 SELECT trans_type, COUNT(timestamp)
 FROM hive.fraud.fraud_data
 GROUP BY trans_type
 ORDER BY 2 DESC LIMIT 3;
 
+{
 -- For the next query, as explained here -> https://github.com/trinodb/trino/issues/9097
 -- it's needed to turn off the statistics, otherwise it fails
 SET SESSION hive.parquet_ignore_statistics = true;
-SELECT trans_type, COUNT(timestamp)
-FROM hive.fraud.fraud_data
-WHERE hive.fraud.fraud_data.label = 'fraud'
-GROUP BY trans_type
-ORDER BY 2 DESC LIMIT 3;
 
+-- df[df["label"] == "fraud"][["timestamp", "trans_type"]].groupby(["trans_type"]).count().nlargest(3, "timestamp")
 SELECT trans_type, COUNT(timestamp)
 FROM hive.fraud.fraud_data
 WHERE hive.fraud.fraud_data.label = 'legitimate'
 GROUP BY trans_type
 ORDER BY 2 DESC LIMIT 3;
 
+-- df[df["label"] == "legitimate"][["timestamp", "trans_type"]].groupby(["trans_type"]).count().nlargest(3, "timestamp")
+SELECT trans_type, COUNT(timestamp)
+FROM hive.fraud.fraud_data
+WHERE hive.fraud.fraud_data.label = 'fraud'
+GROUP BY trans_type
+ORDER BY 2 DESC LIMIT 3;
+}
+
 -- Missing the TOTAL, and the PERCENTAGE
 SELECT label, trans_type, count(timestamp)
 FROM hive.fraud.fraud_data
 GROUP BY label, trans_type
 ORDER BY 1, 2;
+
 /*
 WITH totalFraud AS (SELECT 'fraud' as label, count(timestamp) as total FROM hive.fraud.fraud_data WHERE label='fraud'),
      totalLegit AS (SELECT 'legitimate' as label, count(timestamp) as total FROM hive.fraud.fraud_data WHERE label='legitimate')
