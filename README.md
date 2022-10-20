@@ -26,14 +26,16 @@ The following file types are supported for the Hive connector:
 
 ## Setup some data
 
-##### Using the existing file with 100 rows
+##### Using the existing file with 100 rows with 0% corrupted data
 ```shell
-cp fraud_100.parquet data/minio/fraud/fraud_data/
+cp fraud_100_corrupted_0.parquet data/minio/fraud/fraud_data/
 ```
 
 ##### Or creating a file with the number of rows you need 
+**N**: must be greater than 0 (default: 100)
+**C**: must be between 0 and 100 (default: 0) (approximate percentage of corrupted data)
 ```shell
-go run . <N> && cp fraud_<N>.parquet data/minio/fraud/fraud_data/
+go run . <N> <C> && cp fraud_<N>_corrupted_<C>.parquet data/minio/fraud/fraud_data/
 ```
 
 ## Start Trino CLI and run some queries
