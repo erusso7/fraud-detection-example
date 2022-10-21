@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type TransType string
@@ -40,21 +41,12 @@ const (
 var offset = 0
 var labels = []Label{LabelLegitimate, LabelFraud}
 var transTypes = []TransType{TransTypeChip, TransTypeContactLess, TransTypeOnline, TransTypeSwipe, TransTypeManual}
+var corrupted = 0.0
 
-type Row struct {
-	Timestamp    int       `parquet:"name=timestamp, type=INT32"`
-	Label        Label     `parquet:"name=label, type=BYTE_ARRAY, convertedtype=UTF8"`
-	UserId       int       `parquet:"name=user_id, type=INT32"`
-	Amount       float64   `parquet:"name=amount, type=DOUBLE, scale=2"`
-	MerchantId   int       `parquet:"name=merchant_id, type=INT32"`
-	TransType    TransType `parquet:"name=trans_type, type=BYTE_ARRAY"`
-	Foreign      bool      `parquet:"name=foreign, type=BOOLEAN"`
-	InterArrival float64   `parquet:"name=inter_arrival, type=DOUBLE"`
-}
-
-func NewRow() Row {
+func NewRow(errorRatio int) interface{} {
 	offset += rand.Intn(10)
-	return Row{
+
+	r := Row{
 		Timestamp:    initialDate + offset,
 		Label:        labels[rand.Intn(len(labels))],
 		UserId:       rand.Intn(maxUserID),
@@ -64,6 +56,13 @@ func NewRow() Row {
 		Foreign:      rand.Intn(2) == 1,
 		InterArrival: math.Round(rand.Float64()*10_000*1000) / 1000,
 	}
+
+	if rand.Intn(100) < errorRatio {
+		corrupted++
+		return corruptRow(r)
+	}
+
+	return r
 }
 
 func (r Row) String() string {
@@ -87,6 +86,7 @@ func (r Row) String() string {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	var err error
 
 	num := 100
@@ -98,7 +98,16 @@ func main() {
 		num = int(arg)
 	}
 
-	fileName := "fraud_" + fmt.Sprint(num) + ".parquet"
+	errorRatio := 0
+	if len(os.Args) > 2 {
+		arg, err := strconv.ParseInt(os.Args[2], 10, 32)
+		if err != nil {
+			log.Fatal(err)
+		}
+		errorRatio = int(arg)
+	}
+
+	fileName := fmt.Sprintf("fraud_%d_corrupted_%d.parquet", num, errorRatio)
 	//write
 	fw, err := local.NewLocalFileWriter(fileName)
 	if err != nil {
@@ -112,7 +121,7 @@ func main() {
 	}
 
 	for i := 0; i < num; i++ {
-		row := NewRow()
+		row := NewRow(errorRatio)
 		if err = pw.Write(row); err != nil {
 			log.Println("Write error", err)
 		}
@@ -122,4 +131,6 @@ func main() {
 	}
 	log.Println("File created: " + fileName)
 	_ = fw.Close()
+
+	log.Printf("Corrupted %.0f/%d (%.2f%%)\n", corrupted, num, corrupted/float64(num)*100)
 }
