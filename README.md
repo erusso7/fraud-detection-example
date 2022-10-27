@@ -32,10 +32,14 @@ cp fraud_100_corrupted_0.parquet data/minio/fraud/fraud_data/
 ```
 
 ##### Or creating a file with the number of rows you need 
-**N**: must be greater than 0 (default: 100)
-**C**: must be between 0 and 100 (default: 0) (approximate percentage of corrupted data)
+-> **N**: number of rows to generate. Must be a positive integer (default: 100).
+
+-> **CT**: corruption type ('missing': will remove some columns. 'empty': will keep the column but remove the data instead).
+
+->  **CN**: approximate percentage of corrupted data, must be between 0 and 100 (default: 0).
+
 ```shell
-go run . <N> <C> && cp fraud_<N>_corrupted_<C>.parquet data/minio/fraud/fraud_data/
+go run . -r <N> -ct <CT> -cp <CP> && cp fraud_<N>_<CT>_<CP>.parquet data/minio/fraud/fraud_data/
 ```
 
 ## Start Trino CLI and run some queries
